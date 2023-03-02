@@ -20,7 +20,36 @@ CREATE TABLE "geo-test".task
     name text
 );
 --5
+ALTER TABLE "geo-test".test_point
+ADD FOREIGN KEY (task) REFERENCES "geo-test".task(id);
+--6
+CREATE INDEX index_tp_task_id
+ON "geo-test".test_point(task, id);
+--7
+--Поскольку мы добавили внешний ключ с поля task на поле id, то нам необходимо добавить строку с id = 1 в таблицу tsk, чтобы ссылаться на нее.
+INSERT INTO "geo-test".task VALUES (1, NULL);
+INSERT INTO "geo-test".test_point VALUES (1, 1, 1, 0, 0);
+INSERT INTO "geo-test".test_point VALUES (2, 1, 0, 1, 0);
+INSERT INTO "geo-test".test_point VALUES (3, 1, 0, 0, 1);
+--8
+SELECT * FROM "geo-test".test_point
+WHERE id = 2;
 
-select AddGeometryColumn('geo-test', 'test_point', 'geom', -1, 'point', 3);
-update "geo-test".test_point set geom = st_geomfromtext('point(0 0 1)')
-where id = 3
+--PostGis
+--9
+CREATE EXTENSION postgis;
+--10
+SELECT AddGeometryColumn('geo-test', 'test_point', 'geom', -1, 'point', 3);
+--11
+UPDATE "geo-test".test_point SET geom = st_geomfromtext('point(1 0 0)')
+WHERE ID = 1;
+UPDATE "geo-test".test_point SET geom = st_geomfromtext('point(0 1 0)')
+WHERE ID = 2;
+UPDATE "geo-test".test_point SET geom = st_geomfromtext('point(0 0 1)')
+WHERE ID = 3;
+--12
+SELECT ST_AsGeoJSON(t.*)
+FROM (SELECT geom FROM "geo-test".test_point) AS t(geom);
+--"{""type"": ""Feature"", ""geometry"": {""type"":""Point"",""coordinates"":[1,0,0]}, ""properties"": {}}"
+--"{""type"": ""Feature"", ""geometry"": {""type"":""Point"",""coordinates"":[0,1,0]}, ""properties"": {}}"
+--"{""type"": ""Feature"", ""geometry"": {""type"":""Point"",""coordinates"":[0,0,1]}, ""properties"": {}}"
