@@ -1,0 +1,26 @@
+--1
+CREATE SCHEMA "geo-test"
+    AUTHORIZATION postgres;
+--2
+CREATE TABLE "geo-test".test_point
+(
+    id integer NOT NULL,
+    task integer,
+    x double precision,
+    y double precision,
+    z double precision
+);
+--3
+ALTER TABLE "geo-test".test_point
+ADD CONSTRAINT test_point_pk PRIMARY KEY (id);
+--4
+CREATE TABLE "geo-test".task
+(
+    id integer PRIMARY KEY,
+    name text
+);
+--5
+
+select AddGeometryColumn('geo-test', 'test_point', 'geom', -1, 'point', 3);
+update "geo-test".test_point set geom = st_geomfromtext('point(0 0 1)')
+where id = 3
